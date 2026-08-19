@@ -1,0 +1,3 @@
+# Dependencias solo para desarrollo/pruebas (no necesarias para usar la app)
+-r requirements.txt
+piexif>=1.1.3   # escribir GPS en EXIF al generar datos sintéticos (tools/make_synth.py)

@@ -1,0 +1,14 @@
+.venv/
+tmp/
+out/
+__pycache__/
+*.pyc
+.DS_Store
+.git/
+.claude/
+*.tif
+*.tiff
+requirements.txt
+requirements-dev.txt
+README.md
+start.sh

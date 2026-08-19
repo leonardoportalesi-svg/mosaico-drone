@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mosaico-Drone</title>
+<style>
+  :root{
+    --bg:#0e1726; --panel:#172338; --panel2:#1e2d47; --line:#2b3c5c;
+    --txt:#e6edf7; --muted:#93a4c0; --accent:#3fa7ff; --accent2:#27d09a;
+    --warn:#ffb454; --err:#ff6b6b; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 70% -10%,#1b2c49,var(--bg));
+    color:var(--txt);min-height:100vh;padding:32px 16px}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:.3px}
+  h1 .pin{color:var(--accent2)}
+  .sub{color:var(--muted);margin:0 0 24px;font-size:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;margin-bottom:16px}
+  .drop{border:2px dashed var(--line);border-radius:var(--radius);padding:30px 20px;
+    text-align:center;transition:.15s;cursor:pointer;background:var(--panel2)}
+  .drop.hot{border-color:var(--accent);background:#1c3050}
+  .drop b{color:var(--accent)}
+  .drop .hint{color:var(--muted);font-size:13px;margin-top:6px}
+  .or{display:flex;align-items:center;gap:12px;color:var(--muted);margin:16px 0;font-size:13px}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+  input[type=text],input[type=number],select{width:100%;padding:10px 12px;border-radius:10px;
+    border:1px solid var(--line);background:#0f1a2c;color:var(--txt);font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .row{display:flex;gap:10px;align-items:center}
+  .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--txt);margin-top:22px}
+  .chk input{width:18px;height:18px;accent-color:var(--accent2)}
+  button{background:linear-gradient(180deg,var(--accent),#2b7fd6);color:#fff;border:0;
+    padding:13px 22px;border-radius:11px;font-size:15px;font-weight:600;cursor:pointer;width:100%}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .bar{height:10px;background:#0f1a2c;border-radius:6px;overflow:hidden;margin:10px 0}
+  .bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:width .2s}
+  .phase{font-size:14px;display:flex;justify-content:space-between;color:var(--muted)}
+  .phase b{color:var(--txt)}
+  .hidden{display:none}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:14px 0}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .stat .v{font-size:18px;font-weight:600;margin-top:2px}
+  .preview{width:100%;border-radius:10px;border:1px solid var(--line);margin-top:6px;
+    background:#0a1320 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="10" height="10" fill="%23121f33"/><rect x="10" y="10" width="10" height="10" fill="%23121f33"/></svg>')}
+  .dl{display:inline-block;margin-top:14px;background:linear-gradient(180deg,var(--accent2),#1bae82);
+    width:auto;padding:12px 20px;border-radius:11px;color:#04231a;font-weight:700;text-decoration:none}
+  .warn{color:var(--warn);font-size:13px;margin-top:8px}
+  .err{color:var(--err);font-size:14px;margin-top:8px}
+  .files{color:var(--accent2);font-size:13px;margin-top:10px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="pin">◎</span> Mosaico-Drone</h1>
+  <p class="sub">Soltá tus fotos de drone georeferenciadas y obtené un único GeoTIFF, a resolución nativa.</p>
+
+  <div class="card">
+    <div id="drop" class="drop">
+      <div>Arrastrá y soltá las fotos acá, o <b>hacé clic para elegirlas</b></div>
+      <div class="hint">JPG/PNG con GPS en el EXIF · se suben al servidor local</div>
+      <input id="file" type="file" multiple accept="image/*" class="hidden">
+    </div>
+    <div id="files" class="files hidden"></div>
+
+    <div id="folderSection">
+      <div class="or">o procesá una carpeta del disco (recomendado para muchas fotos)</div>
+      <label for="folder">Ruta de la carpeta en este equipo</label>
+      <input id="folder" type="text" placeholder="/Users/leo/fotos_vuelo_01">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label for="gsd">GSD de salida (m/px)</label>
+        <input id="gsd" type="number" step="0.001" placeholder="auto (nativo)">
+      </div>
+      <div>
+        <label for="model">Modelo de anclaje</label>
+        <select id="model">
+          <option value="affine">Afín (recomendado)</option>
+          <option value="similarity">Similitud</option>
+        </select>
+      </div>
+      <div>
+        <label for="maxdim">Lado máx (px)</label>
+        <input id="maxdim" type="number" value="30000">
+      </div>
+      <div class="chk"><input id="cog" type="checkbox" checked><label for="cog" style="margin:0">Cloud-Optimized (COG)</label></div>
+    </div>
+  </div>
+
+  <button id="go">Generar mosaico</button>
+
+  <div id="progress" class="card hidden" style="margin-top:16px">
+    <div class="phase"><b id="phaseName">Procesando…</b><span id="phaseMsg"></span></div>
+    <div class="bar"><div id="barFill"></div></div>
+  </div>
+
+  <div id="result" class="card hidden">
+    <div class="stats" id="stats"></div>
+    <div id="warnings"></div>
+    <img id="preview" class="preview" alt="vista previa del mosaico">
+    <div><a id="download" class="dl" href="#">⬇ Descargar GeoTIFF</a></div>
+  </div>
+
+  <div id="error" class="err hidden"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let pickedFiles = [];
+
+// En despliegue público el server no acepta rutas de disco arbitrarias
+// (evita path traversal); ahí se oculta esa opción y solo queda drag&drop.
+fetch("/api/config").then(r => r.json()).then(cfg => {
+  if (!cfg.allow_local_paths) $("folderSection").classList.add("hidden");
+}).catch(() => {});
+
+const drop = $("drop"), fileInput = $("file");
+drop.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", e => setFiles([...e.target.files]));
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add("hot");
+}));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove("hot");
+}));
+drop.addEventListener("drop", e => {
+  const fs = [...e.dataTransfer.files].filter(f => f.type.startsWith("image/"));
+  setFiles(fs);
+});
+function setFiles(fs){
+  pickedFiles = fs;
+  const box = $("files");
+  if(fs.length){ box.classList.remove("hidden"); box.textContent = `${fs.length} foto(s) seleccionada(s)`; }
+  else box.classList.add("hidden");
+}
+
+const PHASE_NAMES = {ingesta:"Leyendo EXIF/GPS", features:"Detectando puntos",
+  matcheo:"Buscando coincidencias", georef:"Georeferenciando",
+  compositado:"Fusionando fotos", escritura:"Escribiendo GeoTIFF", listo:"Listo", done:"Listo"};
+
+$("go").addEventListener("click", run);
+
+async function run(){
+  reset();
+  $("go").disabled = true;
+  try{
+    let folder = $("folder").value.trim();
+    if(!folder){
+      if(!pickedFiles.length){ throw new Error("Soltá fotos o indicá una carpeta."); }
+      showProgress("Subiendo fotos…", "");
+      const fd = new FormData();
+      pickedFiles.forEach(f => fd.append("files", f));
+      const up = await (await fetch("/api/upload", {method:"POST", body:fd})).json();
+      if(up.error) throw new Error(up.error);
+      folder = up.folder;
+    }
+    const body = {
+      folder,
+      world_model: $("model").value,
+      cog: $("cog").checked,
+      max_dim: parseInt($("maxdim").value) || 30000,
+      gsd: $("gsd").value ? parseFloat($("gsd").value) : null,
+    };
+    const st = await (await fetch("/api/start", {method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)})).json();
+    if(st.error) throw new Error(st.error);
+    listen(st.job_id);
+  }catch(e){ showError(e.message); $("go").disabled = false; }
+}
+
+function listen(jobId){
+  const es = new EventSource(`/api/events/${jobId}`);
+  es.onmessage = ev => {
+    const d = JSON.parse(ev.data);
+    if(d.phase === "done"){ es.close(); finish(jobId, d.report); }
+    else if(d.phase === "error"){ es.close(); showError(d.msg); $("go").disabled=false; }
+    else {
+      const pct = (d.i && d.n) ? Math.round(100*d.i/d.n) : null;
+      showProgress(PHASE_NAMES[d.phase] || d.phase, d.msg, pct);
+    }
+  };
+  es.onerror = () => { es.close(); showError("Se perdió la conexión con el servidor."); $("go").disabled=false; };
+}
+
+function finish(jobId, r){
+  $("progress").classList.add("hidden");
+  $("result").classList.remove("hidden");
+  const fmt = n => Number(n).toLocaleString("es-AR");
+  const stats = [
+    ["Fotos unidas", `${r.n_placed}/${r.n_input}`],
+    ["CRS", "EPSG:"+r.epsg],
+    ["GSD", r.gsd+" m/px"],
+    ["Tamaño", `${fmt(r.size_px[0])}×${fmt(r.size_px[1])} px`],
+    ["Tiempo", r.total_s+" s"],
+    ["Coincidencias", r.n_edges+" pares"],
+  ];
+  $("stats").innerHTML = stats.map(([k,v]) =>
+    `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+  $("warnings").innerHTML = (r.warnings||[]).map(w => `<div class="warn">⚠️ ${w}</div>`).join("");
+  $("preview").src = `/api/preview/${jobId}?t=${Date.now()}`;
+  $("download").href = `/api/result/${jobId}`;
+  $("go").disabled = false;
+}
+
+function showProgress(name, msg, pct){
+  $("progress").classList.remove("hidden");
+  $("phaseName").textContent = name;
+  $("phaseMsg").textContent = msg || "";
+  if(pct !== null && pct !== undefined) $("barFill").style.width = pct+"%";
+}
+function showError(m){ const e=$("error"); e.classList.remove("hidden"); e.textContent = "Error: "+m; }
+function reset(){
+  $("error").classList.add("hidden");
+  $("result").classList.add("hidden");
+  $("progress").classList.add("hidden");
+  $("barFill").style.width = "0%";
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.venv/
+out/
+__pycache__/
+*.pyc
+.DS_Store
+/tmp/
+*.tif
+*.tiff
+!tools/**/*.tif
+.claude/

@@ -1,0 +1,9 @@
+# Mosaico-Drone — dependencias (pisos mínimos; versiones exactas en requirements.lock.txt)
+numpy>=2.0
+opencv-contrib-python-headless>=4.10   # SIFT + módulo detail (blenders); headless = sin libs gráficas del SO
+rasterio>=1.4                 # I/O GeoTIFF/COG (trae su propio GDAL)
+pyproj>=3.7                   # detección de zona UTM + transformaciones de CRS
+Pillow>=11                    # lectura de EXIF/XMP
+scipy>=1.14                   # KDTree para vecinos por GPS
+Flask>=3.0                    # UI web (drag & drop)
+gunicorn>=23.0                # servidor WSGI de producción
