@@ -64,7 +64,7 @@
   <div class="card">
     <div id="drop" class="drop">
       <div>Arrastrá y soltá las fotos acá, o <b>hacé clic para elegirlas</b></div>
-      <div class="hint">JPG/PNG con GPS en el EXIF · se suben al servidor local</div>
+      <div class="hint" id="hint">JPG/PNG con GPS en el EXIF</div>
       <input id="file" type="file" multiple accept="image/*" class="hidden">
     </div>
     <div id="files" class="files hidden"></div>
@@ -121,7 +121,11 @@ let pickedFiles = [];
 // En despliegue público el server no acepta rutas de disco arbitrarias
 // (evita path traversal); ahí se oculta esa opción y solo queda drag&drop.
 fetch("/api/config").then(r => r.json()).then(cfg => {
-  if (!cfg.allow_local_paths) $("folderSection").classList.add("hidden");
+  if (!cfg.allow_local_paths) {
+    $("folderSection").classList.add("hidden");
+    $("hint").textContent =
+      `JPG/PNG con GPS en el EXIF · hasta ${cfg.max_files} fotos y ${cfg.max_upload_mb} MB por vez`;
+  }
 }).catch(() => {});
 
 const drop = $("drop"), fileInput = $("file");
