@@ -5,6 +5,8 @@ GeoTIFF georeferenciado, a resolución nativa**. Soltás las fotos, el programa
 busca puntos en común entre ellas, las alinea y las pega en un solo mosaico
 anclado a coordenadas reales (UTM).
 
+🌐 **Probalo online:** https://mosaico-drone-production.up.railway.app
+
 ## Qué hace
 
 ```
@@ -96,6 +98,8 @@ Sin fotos a mano, podés generar un set sintético con GPS real en el EXIF:
   considerá [OpenDroneMap](https://www.opendronemap.org/).
 
 ## Deploy público (Railway)
+
+**App en vivo:** https://mosaico-drone-production.up.railway.app
 
 La app corre bajo Docker + gunicorn (`Dockerfile`, `railway.json`). Pasos:
 
