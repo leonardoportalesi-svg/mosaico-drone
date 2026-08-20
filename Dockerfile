@@ -1,9 +1,11 @@
 # Mosaico-Drone — imagen de producción (Railway/Render/Fly.io/cualquier host Docker)
 FROM python:3.13-slim
 
-# libgomp1: requerida por OpenCV (paralelismo interno).
-# rasterio trae su propio GDAL embebido en el wheel, no hace falta instalarlo aparte.
-RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+# rasterio trae su propio GDAL embebido en el wheel, pero asume presentes las libs
+# de la política manylinux, que la imagen slim recorta:
+#   libgomp1  -> OpenMP (OpenCV / scipy)
+#   libexpat1 -> parseo XML de GDAL (sin esto: ImportError libexpat.so.1)
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 libexpat1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
